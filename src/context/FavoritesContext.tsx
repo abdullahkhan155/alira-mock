@@ -15,8 +15,16 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     setFavorites((prev) => prev.filter((meal) => meal.id !== id));
   };
 
+  const toggleFavorite = (meal: any) => {
+    setFavorites((prev) =>
+      prev.some((fav) => fav.id === meal.id)
+        ? prev.filter((fav) => fav.id !== meal.id)
+        : [...prev, meal]
+    );
+  };
+
   return (
-    <FavoritesContext.Provider value={{ favorites, addFavorite, removeFavorite }}>
+    <FavoritesContext.Provider value={{ favorites, addFavorite, removeFavorite, toggleFavorite }}>
       {children}
     </FavoritesContext.Provider>
   );
