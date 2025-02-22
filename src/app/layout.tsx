@@ -4,9 +4,10 @@ import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import Link from "next/link";
 import { FavoritesProvider } from "@/context/FavoritesContext";
+import { HomeIcon, BuildingStorefrontIcon, HeartIcon } from "@heroicons/react/24/solid";
 
 export const metadata: Metadata = {
-  title: "Alira Mock",
+  title: "Alira",
   description: "Personalized dining at UW–Madison",
 };
 
@@ -15,33 +16,33 @@ const openSans = Open_Sans({
   subsets: ["latin"],
 });
 
-// Updated NavBar: "Menus" instead of "Dining"
+// Global NavBar (Only appears once)
 function NavBar() {
   return (
-    <nav className="w-full bg-primary text-white">
-      <div className="max-w-5xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between">
-        {/* Logo / Title */}
-        <div className="font-bold text-lg">Alira Mock</div>
+    <nav className="w-full bg-green-600 text-white shadow-md">
+      <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+        {/* Logo / Home Link */}
+        <Link href="/" className="flex items-center space-x-2">
+          <HomeIcon className="w-6 h-6" />
+          <span className="text-xl font-bold">Alira</span>
+        </Link>
 
-        {/* Nav Links */}
-        <div className="mt-2 sm:mt-0 flex gap-4">
-          <Link
-            href="/"
-            className="px-3 py-2 rounded-md hover:bg-foreground transition font-medium"
-          >
-            Home
-          </Link>
+        {/* Navigation Links */}
+        <div className="flex space-x-6">
           <Link
             href="/dining"
-            className="px-3 py-2 rounded-md hover:bg-foreground transition font-medium"
+            className="flex items-center space-x-1 hover:text-green-200 transition"
           >
-            Menus
+            <BuildingStorefrontIcon className="w-5 h-5" />
+            <span>Menus</span>
           </Link>
+
           <Link
             href="/favorites"
-            className="px-3 py-2 rounded-md hover:bg-foreground transition font-medium"
+            className="flex items-center space-x-1 hover:text-green-200 transition"
           >
-            Favorites
+            <HeartIcon className="w-5 h-5" />
+            <span>Favorites</span>
           </Link>
         </div>
       </div>
@@ -49,17 +50,13 @@ function NavBar() {
   );
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${openSans.className} bg-background text-foreground`}>
+      <body className={`${openSans.className} bg-gray-50`}>
         <FavoritesProvider>
           <NavBar />
-          {children}
+          <main>{children}</main>
         </FavoritesProvider>
       </body>
     </html>

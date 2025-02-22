@@ -1,35 +1,40 @@
 "use client";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
-import { createContext, useContext, useState } from "react";
+interface FavoritesContextType {
+  favorites: string[];
+  toggleFavorite: (id: string) => void;
+}
 
-const FavoritesContext = createContext<any>(null);
+const FavoritesContext = createContext<FavoritesContextType>({
+  favorites: [],
+  toggleFavorite: () => {},
+});
 
-export function FavoritesProvider({ children }: { children: React.ReactNode }) {
-  const [favorites, setFavorites] = useState<any[]>([]);
+export function FavoritesProvider({ children }: { children: ReactNode }) {
+  // Keep a list (array) of favorites
+  const [favorites, setFavorites] = useState<string[]>([]);
 
-  const addFavorite = (meal: any) => {
-    setFavorites((prev) => [...prev, meal]);
-  };
-
-  const removeFavorite = (id: string) => {
-    setFavorites((prev) => prev.filter((meal) => meal.id !== id));
-  };
-
-  const toggleFavorite = (meal: any) => {
-    setFavorites((prev) =>
-      prev.some((fav) => fav.id === meal.id)
-        ? prev.filter((fav) => fav.id !== meal.id)
-        : [...prev, meal]
-    );
-  };
+  // Add or remove an item from the favorites array
+  function toggleFavorite(id: string) {
+    setFavorites((prev) => {
+      // If it's already favorited, remove it
+      if (prev.includes(id)) {
+        return prev.filter((favId) => favId !== id);
+      }
+      // Otherwise, add it
+      return [...prev, id];
+    });
+  }
 
   return (
-    <FavoritesContext.Provider value={{ favorites, addFavorite, removeFavorite, toggleFavorite }}>
+    <FavoritesContext.Provider value={{ favorites, toggleFavorite }}>
       {children}
     </FavoritesContext.Provider>
   );
 }
 
+// Use this hook in your components
 export function useFavorites() {
   return useContext(FavoritesContext);
 }
