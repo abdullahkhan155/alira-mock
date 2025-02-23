@@ -1,7 +1,9 @@
 "use client";
 import { useFavorites } from "@/context/FavoritesContext";
 import { HeartIcon } from "@heroicons/react/24/solid";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import AuthModal from "@/components/AuthModal";
 
 interface MealProps {
   id: string;
@@ -17,14 +19,28 @@ export default function MealCard({ id, name, calories, tags, diningHall }: MealP
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [session, setSession] = useState<any>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  // Called when the heart icon is clicked
+  // Fetch session on component mount
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+    };
+    checkSession();
+  }, []);
+
+  // Handle click on the favorite button
   const handleFavoriteClick = () => {
+    if (!session) {
+      setAuthModalOpen(true);
+      return;
+    }
+
     if (isFavorited) {
-      // If already favorited, show a confirmation dialog to unfavorite
       setShowConfirm(true);
     } else {
-      // If not favorited, animate + favorite
       animateFavorite();
       toggleFavorite(id);
     }
@@ -99,6 +115,9 @@ export default function MealCard({ id, name, calories, tags, diningHall }: MealP
           </div>
         </div>
       )}
+
+      {/* Sign In Modal */}
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   );
 }

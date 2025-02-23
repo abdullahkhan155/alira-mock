@@ -1,10 +1,12 @@
-// src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import Link from "next/link";
 import { FavoritesProvider } from "@/context/FavoritesContext";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 import { HomeIcon, BuildingStorefrontIcon, HeartIcon } from "@heroicons/react/24/solid";
+import { supabase } from "@/lib/supabaseClient";
 
 export const metadata: Metadata = {
   title: "Alira",
@@ -16,8 +18,11 @@ const openSans = Open_Sans({
   subsets: ["latin"],
 });
 
-// Global NavBar (Only appears once)
-function NavBar() {
+// Global NavBar (Appears across all pages)
+async function NavBar() {
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { session } } = await supabase.auth.getSession();
+
   return (
     <nav className="w-full bg-green-600 text-white shadow-md">
       <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -29,28 +34,35 @@ function NavBar() {
 
         {/* Navigation Links */}
         <div className="flex space-x-6">
-          <Link
-            href="/dining"
-            className="flex items-center space-x-1 hover:text-green-200 transition"
-          >
+          <Link href="/dining" className="flex items-center space-x-1 hover:text-green-200 transition">
             <BuildingStorefrontIcon className="w-5 h-5" />
             <span>Menus</span>
           </Link>
 
-          <Link
-            href="/favorites"
-            className="flex items-center space-x-1 hover:text-green-200 transition"
-          >
+          <Link href="/favorites" className="flex items-center space-x-1 hover:text-green-200 transition">
             <HeartIcon className="w-5 h-5" />
             <span>Favorites</span>
           </Link>
+
+          {/* Show Sign Out Button if User is Logged In */}
+          {session && (
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.href = "/auth/signin";
+              }}
+              className="bg-red-500 px-3 py-1 rounded"
+            >
+              Sign Out
+            </button>
+          )}
         </div>
       </div>
     </nav>
   );
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={`${openSans.className} bg-gray-50`}>
