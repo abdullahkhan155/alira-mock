@@ -1,5 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 import MealCard from "@/components/MealCard";
 import { meals } from "@/lib/meals";
 import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/solid";
@@ -22,10 +24,37 @@ const mealTimes = ["Breakfast", "Lunch", "Dinner"];
 const dietaryFilters = ["Vegetarian", "Vegan", "Gluten-Free", "Pescatarian"];
 
 export default function DiningPage() {
-  const [selectedDate, setSelectedDate] = useState("2025-02-18");
+  const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
   const [selectedHall, setSelectedHall] = useState("Gordons");
   const [selectedMealTime, setSelectedMealTime] = useState("Lunch");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [session, setSession] = useState<any>(null);
+  const router = useRouter();
+
+  // Redirect to login if user is not signed in
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      if (!data.session) {
+        router.push("/login");
+      }
+    };
+    fetchSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, newSession) => {
+        setSession(newSession);
+        if (!newSession) {
+          router.push("/login");
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [router]);
 
   // Convert to keys for accessing meals
   const hallKey = selectedHall.toLowerCase();

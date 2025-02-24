@@ -1,7 +1,7 @@
 // src/lib/meals.ts
 
 export const meals = {
-  "2025-02-18": {
+  "2025-02-23": {
     breakfast: {
       gordons: [
         {

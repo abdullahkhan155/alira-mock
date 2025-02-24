@@ -8,31 +8,26 @@ import {
   BuildingStorefrontIcon,
   HeartIcon,
   UserIcon,
-  UserPlusIcon,
+  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/solid";
 
 export default function NavBar() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
+  const [loadingSession, setLoadingSession] = useState(true);
 
   useEffect(() => {
-    // 1) Fetch current session
     const fetchSession = async () => {
       const { data } = await supabase.auth.getSession();
-      console.log("NavBar session from supabase:", data.session); // DEBUG
       setSession(data.session);
+      setLoadingSession(false);
     };
     fetchSession();
 
-    // 2) Listen for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
-        console.log("NavBar onAuthStateChange => newSession:", newSession); // DEBUG
-        setSession(newSession);
-      }
-    );
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
 
-    // Cleanup
     return () => {
       authListener.subscription.unsubscribe();
     };
@@ -40,9 +35,8 @@ export default function NavBar() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    console.log("Signed out. Session should be null now.");
     setSession(null);
-    router.push("/");
+    router.push("/login");
   };
 
   return (
@@ -56,51 +50,31 @@ export default function NavBar() {
 
         {/* Right: Nav Links + Auth */}
         <div className="flex space-x-6 items-center">
-          <Link
-            href="/dining"
-            className="flex items-center space-x-1 hover:text-green-200 transition"
-          >
+          <Link href="/dining" className="flex items-center space-x-1 hover:text-green-200 transition">
             <BuildingStorefrontIcon className="w-5 h-5" />
             <span>Menus</span>
           </Link>
-
-          <Link
-            href="/favorites"
-            className="flex items-center space-x-1 hover:text-green-200 transition"
-          >
+          <Link href="/favorites" className="flex items-center space-x-1 hover:text-green-200 transition">
             <HeartIcon className="w-5 h-5" />
             <span>Favorites</span>
           </Link>
 
-          {/* Show Sign Out if we have a session; otherwise show Sign In / Sign Up */}
-          {session ? (
+          {/* Show Sign Out if logged in; otherwise show Sign In */}
+          {loadingSession ? (
+            <span className="text-sm">Loading...</span>
+          ) : session ? (
             <button
               onClick={handleSignOut}
               className="flex items-center space-x-1 bg-red-500 px-3 py-1 rounded hover:bg-red-600 transition"
             >
-              <UserIcon className="w-5 h-5" />
+              <ArrowRightOnRectangleIcon className="w-5 h-5" />
               <span>Sign Out</span>
             </button>
           ) : (
-            <div className="flex space-x-4">
-              {/* Sign In */}
-              <Link
-                href="/auth/signin"
-                className="flex items-center space-x-1 bg-blue-500 px-3 py-1 rounded hover:bg-blue-600 transition"
-              >
-                <UserIcon className="w-5 h-5" />
-                <span>Sign In</span>
-              </Link>
-
-              {/* Sign Up */}
-              <Link
-                href="/auth/signup"
-                className="flex items-center space-x-1 bg-green-500 px-3 py-1 rounded hover:bg-green-600 transition"
-              >
-                <UserPlusIcon className="w-5 h-5" />
-                <span>Sign Up</span>
-              </Link>
-            </div>
+            <Link href="/login" className="flex items-center space-x-1 bg-blue-500 px-3 py-1 rounded hover:bg-blue-600 transition">
+              <UserIcon className="w-5 h-5" />
+              <span>Sign In</span>
+            </Link>
           )}
         </div>
       </div>

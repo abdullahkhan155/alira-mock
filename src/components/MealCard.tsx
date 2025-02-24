@@ -3,7 +3,7 @@ import { useFavorites } from "@/context/FavoritesContext";
 import { HeartIcon } from "@heroicons/react/24/solid";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import AuthModal from "@/components/AuthModal";
+import { useRouter } from "next/navigation";
 
 interface MealProps {
   id: string;
@@ -20,21 +20,31 @@ export default function MealCard({ id, name, calories, tags, diningHall }: MealP
   const [showConfirm, setShowConfirm] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [session, setSession] = useState<any>(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [loadingSession, setLoadingSession] = useState(true);
+  const router = useRouter();
 
-  // Fetch session on component mount
+  // Fetch session and watch for changes
   useEffect(() => {
-    const checkSession = async () => {
+    const fetchSession = async () => {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
+      setLoadingSession(false);
     };
-    checkSession();
+    fetchSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   // Handle click on the favorite button
   const handleFavoriteClick = () => {
     if (!session) {
-      setAuthModalOpen(true);
+      router.push("/login"); // Redirect to login page
       return;
     }
 
@@ -82,9 +92,10 @@ export default function MealCard({ id, name, calories, tags, diningHall }: MealP
       {/* Favorite (Heart) Button */}
       <button
         onClick={handleFavoriteClick}
+        disabled={loadingSession} // Prevents undefined session issues
         className={`absolute top-3 right-3 transition transform hover:scale-110 ${
           isFavorited ? "text-red-500" : "text-gray-400"
-        }`}
+        } ${loadingSession ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <HeartIcon
           className={`w-6 h-6 transition-transform ${
@@ -115,9 +126,6 @@ export default function MealCard({ id, name, calories, tags, diningHall }: MealP
           </div>
         </div>
       )}
-
-      {/* Sign In Modal */}
-      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   );
 }

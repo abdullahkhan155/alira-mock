@@ -5,8 +5,12 @@ import Link from "next/link";
 import { FavoritesProvider } from "@/context/FavoritesContext";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { HomeIcon, BuildingStorefrontIcon, HeartIcon } from "@heroicons/react/24/solid";
-import { supabase } from "@/lib/supabaseClient";
+import {
+  HomeIcon,
+  BuildingStorefrontIcon,
+  HeartIcon,
+  UserIcon,
+} from "@heroicons/react/24/solid";
 
 export const metadata: Metadata = {
   title: "Alira",
@@ -18,43 +22,65 @@ const openSans = Open_Sans({
   subsets: ["latin"],
 });
 
-// Global NavBar (Appears across all pages)
+// Global NavBar (Server Component)
 async function NavBar() {
   const supabase = createServerComponentClient({ cookies });
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   return (
     <nav className="w-full bg-green-600 text-white shadow-md">
-      <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-        {/* Logo / Home Link */}
-        <Link href="/" className="flex items-center space-x-2">
+      <div className="max-w-5xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+        {/* Left: Logo/Home */}
+        <Link
+          href="/"
+          className="flex items-center space-x-2 hover:opacity-90 transition"
+        >
           <HomeIcon className="w-6 h-6" />
-          <span className="text-xl font-bold">Alira</span>
+          <span className="text-2xl font-bold">Alira</span>
         </Link>
 
-        {/* Navigation Links */}
-        <div className="flex space-x-6">
-          <Link href="/dining" className="flex items-center space-x-1 hover:text-green-200 transition">
+        {/* Right: Menus, Favorites, Account */}
+        <div className="flex items-center flex-wrap gap-6">
+          {/* Menus Link */}
+          <Link
+            href="/dining"
+            className="text-lg font-semibold flex items-center space-x-1 hover:text-green-200 transition"
+          >
             <BuildingStorefrontIcon className="w-5 h-5" />
             <span>Menus</span>
           </Link>
 
-          <Link href="/favorites" className="flex items-center space-x-1 hover:text-green-200 transition">
+          {/* Favorites Link */}
+          <Link
+            href="/favorites"
+            className="text-lg font-semibold flex items-center space-x-1 hover:text-green-200 transition"
+          >
             <HeartIcon className="w-5 h-5" />
             <span>Favorites</span>
           </Link>
 
-          {/* Show Sign Out Button if User is Logged In */}
-          {session && (
+          {/* Single "Account" Button */}
+          {session ? (
             <button
               onClick={async () => {
                 await supabase.auth.signOut();
-                window.location.href = "/auth/signin";
+                window.location.href = "/login";
               }}
-              className="bg-red-500 px-3 py-1 rounded"
+              className="flex items-center space-x-1 text-sm font-semibold border border-white rounded px-2 py-1 hover:bg-white/10 transition"
             >
-              Sign Out
+              <UserIcon className="w-4 h-4" />
+              <span>Account</span>
             </button>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center space-x-1 text-sm font-semibold border border-white rounded px-2 py-1 hover:bg-white/10 transition"
+            >
+              <UserIcon className="w-4 h-4" />
+              <span>Account</span>
+            </Link>
           )}
         </div>
       </div>
